@@ -6,6 +6,10 @@
 
 //************* Canvas Set Up *************//
 
+let flag = true
+
+let t = d3.transition().duration(750);
+
 let margin = { left:100, right:10, top:10, bottom:150 };
 
 let width = 600 - margin.left - margin.right;
@@ -20,9 +24,27 @@ let g = svg.append('g')
 		margin.top + ')');
 
 
-//**************** Data *****************//
+//**************** Scales & Labels *****************//
 
-// add x label
+// X scale
+let x = d3.scaleBand()
+	.range([0, width])
+	.paddingInner(0.2)
+	.paddingOuter(0.2);
+
+// Y scale
+let y = d3.scaleLinear()
+	.range([height, 0]);
+
+let xAxisGroup = g.append('g')
+	.attr('class', 'x-axis')
+	.attr('transform', 'translate(0, ' + height + ')');
+
+let yAxisGroup = g.append('g')
+	.attr('class', 'y-axis');
+
+
+// X label
 g.append('text')
 	.attr('class', 'x-axis-label')
 	.attr('x', width/2)
@@ -31,8 +53,8 @@ g.append('text')
 	.attr('text-anchor', 'middle')
 	.text('Month');
 
-// add y label
-g.append('text')
+// Y label
+let yLabel = g.append('text')
 	.attr('class', 'y-axis-label')
 	.attr('x', - (height / 2))
 	.attr('y', -60)
@@ -42,49 +64,75 @@ g.append('text')
 	.text('Revenue');
 
 
+//**************** Data *****************//
+
+
 d3.json('data/revenues.json').then(data => {
 	
 	// convert revenue values to integers
-	data.forEach(d => d.revenue = +d.revenue);
-	console.log(data);
+	data.forEach(d => {
+		d.revenue = +d.revenue;
+		d.profit = +d.profit;
+	});
 
-	// set x scale
-	let x = d3.scaleBand()
-		.domain(data.map(d => d.month))
-		.range([0, width])
-		.paddingInner(0.2)
-		.paddingOuter(0.2);
+	d3.interval(() => {
+		update(data);
+		flag = !flag;
+	}, 1000);
 
-	// set y scale
-	let y = d3.scaleLinear()
-		.domain([0, d3.max(data, d => d.revenue)])
-		.range([height, 0]);
+	// run the vis for the first time
+	update(data);
 
-	// add x axis
+}).catch(error => console.log(error));
+
+
+function update(data) {
+	let value = flag ? 'revenue' : 'profit';
+
+	x.domain(data.map(d => d.month));
+	y.domain([0, d3.max(data, d => d[value])]);
+
+
+	// X axis
 	let xAxisCall = d3.axisBottom(x);
-	g.append('g')
-		.attr('class', 'x-axis')
-		.attr('transform', 'translate(0, ' + height + ')')
-		.call(xAxisCall);
+	xAxisGroup.transition(t).call(xAxisCall);
 
-	// add y axis
+	// Y axis
 	let yAxisCall = d3.axisLeft(y)
 		.tickFormat(d => '$' + d);
-	g.append('g')
-		.attr('class', 'y-axis')
-		.call(yAxisCall);
-
-	// add bars to chart
+	yAxisGroup.transition(t).call(yAxisCall);
+	
+	// JOIN new data with old elements
 	let bars = g.selectAll('rect')
-		.data(data)
-		.enter()
+		// create key that matches revenue and profit arrays based on month (not index)
+		.data(data, d => d.month);
+
+	// EXIT old elements not present in new data
+	bars.exit()
+		.attr('fill', 'red')
+	.transition(t)
+		.attr('y', y(0))
+		.attr('height', 0)
+		.remove();
+
+	// ENTER new elements present in new data
+	bars.enter()
 		.append('rect')
 			.attr('x', d => x(d.month))
-			.attr('y', d => y(d.revenue))
-			.attr('width', 50)
-			.attr('height', d => height - y(d.revenue))
+			.attr('width', x.bandwidth)
 			.attr('fill', 'green')
+			.attr('y', y(0))
+			.attr('height', 0)
+		// AND UPDATE old elements present in new data
+		.merge(bars)
+		.transition(t)
+			.attr('x', d => x(d.month))
+			.attr('width', x.bandwidth)
+			.attr('y', d => y(d[value]))
+			.attr('height', d => height - y(d[value]));
 
-}).catch(error => console.log(error))
 
+	let label = flag ? 'Revenue' : 'Profit';
+	yLabel.text(label); 
 
+}
