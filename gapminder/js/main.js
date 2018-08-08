@@ -4,8 +4,10 @@
 *    Project 2 - Gapminder Clone
 */
 
-//**************** Canvas *****************//
+let index = 0;
 
+
+//**************** Canvas *****************//
 
 let margin = { left:100, right:10, top:10, bottom:150 };
 
@@ -21,7 +23,7 @@ let g = svg.append('g')
 		margin.top + ')');
 
 
-//**************** Scales & Labels *****************//
+//**************** Scales & Axes *****************//
 
 // X axis
 let x = d3.scaleLog()
@@ -50,7 +52,12 @@ let yAxisCall = d3.axisLeft(y);
 yAxisGroup.call(yAxisCall);
 
 
-// Labels
+// Color
+let color = d3.scaleOrdinal(d3.schemeDark2);
+
+
+//**************** Labels *****************//
+
 let xLabel = g.append('text')
 	.attr('class', 'x-axis-label')
 	.attr('x', width/2)
@@ -68,12 +75,20 @@ let yLabel = g.append('text')
 	.attr('transform', 'rotate(-90)')
 	.text('Life expectancy');
 
+let yearLabel = g.append('text')
+	.attr('class', 'year-label')
+	.attr('x', width - 50)
+	.attr('y', height - 10)
+	.attr('font-size', '25px')
+	.attr('text-anchor', 'middle')
+	.text('1800');
 
+//**************** Data *****************//
 
 
 d3.json("data/data.json").then(data => {
 	
-	// exclude null values
+	// exclude null values in data
 	let cleanData = data.map(year => {
 		return year.countries.filter(country => {
 			let dataExists = country.income && country.life_exp;
@@ -84,9 +99,9 @@ d3.json("data/data.json").then(data => {
 	console.log(cleanData);
 
 	d3.interval(() => {
-		for (let i = 0; i < data.length; i ++){
-			update(cleanData[i]);
-		};
+		// after reaching end of data, loop back to beginning
+		index = (index < 214) ? index+1 : 0;
+		update (cleanData[index]);
 	}, 100);
 
 	// first run of vis
@@ -98,6 +113,12 @@ d3.json("data/data.json").then(data => {
 function update(data) {
 
 	let t = d3.transition().duration(100);
+
+	// Population scale
+	let r = d3.scaleLinear()
+		.domain([0, d3.max(data, d => d.population)])
+		.range([5,25]); 
+
 
 	//JOIN
 	let circles = g.selectAll('circle')
@@ -112,13 +133,16 @@ function update(data) {
 	circles.enter()
 		.append('circle')
 			.attr('class', 'enter')
-			.attr('fill', 'orange')
+			.attr('fill', d => color(d.continent))
 		//UPDATE
 		.merge(circles)
 		.transition(t)
 			.attr('cx', d => x(d.income))
 			.attr('cy', d => y(d.life_exp))
-			.attr('r', 2);
+			.attr('r', d => r(d.population));
+
+	yearLabel.text(index + 1800);
+
 }
 
 
