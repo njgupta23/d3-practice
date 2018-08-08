@@ -32,13 +32,13 @@ let x = d3.scaleBand()
 	.paddingInner(0.2)
 	.paddingOuter(0.2);
 
-// Y scale
-let y = d3.scaleLinear()
-	.range([height, 0]);
-
 let xAxisGroup = g.append('g')
 	.attr('class', 'x-axis')
 	.attr('transform', 'translate(0, ' + height + ')');
+
+// Y scale
+let y = d3.scaleLinear()
+	.range([height, 0]);
 
 let yAxisGroup = g.append('g')
 	.attr('class', 'y-axis');
