@@ -56,6 +56,34 @@ yAxisGroup.call(yAxisCall);
 let color = d3.scaleOrdinal(d3.schemeDark2);
 
 
+//**************** Legend *****************//
+
+let continents = ['europe', 'asia', 'americas', 'africa'];
+
+let legend = g.append('g')
+	.attr('transform', 'translate(' + (width - 10) + ',' + (height - 125) + ')');
+
+continents.forEach((continent, i) => {
+	let legendRow = legend.append('g')
+		.attr('transform', 'translate(0, ' + (i * 20) + ')');
+
+	// add color square to each item in legend
+	legendRow.append('rect')
+		.attr('width', 10)
+		.attr('height', 10)
+		.attr('fill', color(continent));
+
+	// add text for each item in legend
+	legendRow.append('text')
+		.attr('x', -10)
+		.attr('y', 10)
+		.attr('text-anchor', 'end')
+		.style('text-transform', 'capitalize')
+		.text(continent);
+});
+
+
+
 //**************** Labels *****************//
 
 let xLabel = g.append('text')
