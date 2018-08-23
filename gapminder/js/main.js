@@ -5,7 +5,8 @@
 */
 
 let index = 0;
-
+let interval;
+let cleanData;
 
 //**************** Canvas *****************//
 
@@ -131,30 +132,73 @@ let yearLabel = g.append('text')
 d3.json("data/data.json").then(data => {
 	
 	// exclude null values in data
-	let cleanData = data.map(year => {
+	cleanData = data.map(year => {
 		return year.countries.filter(country => {
 			let dataExists = country.income && country.life_exp;
 			return dataExists;
 		})
 	});
 
-	console.log(cleanData);
-
-	d3.interval(() => {
-		// after reaching end of data, loop back to beginning
-		index = (index < 214) ? index+1 : 0;
-		update (cleanData[index]);
-	}, 100);
-
 	// first run of vis
 	update(cleanData[0])
 
 }).catch(error => console.log(error));
 
+$("#play-button")
+	.on("click", function() {
+		let button = $(this);
+		if (button.text() == "Play"){
+			$(button).text("Pause");
+			interval = setInterval(step, 100);
+		}
+		else {
+			button.text("Play");
+			clearInterval(interval);
+		}
+		
+	})
+
+$("#reset-button")
+	.on("click", function(){
+		time = 0;
+		update(cleanData[0]);
+	})	
+
+$("#continent-select")
+	.on("change", () => {
+		update(cleanData[index]);
+	})
+
+$("#date-slider").slider({
+	max: 2104,
+	min: 1800,
+	step: 1,
+	slide: (event, ui) => {
+		time = ui.value - 1800;
+		update(cleanData[time]);
+	}
+})
+
+
+function step() {
+		// after reaching end of data, loop back to beginning
+	index = (index < 214) ? index+1 : 0;
+	update (cleanData[index]);
+}
+
 
 function update(data) {
 
 	let t = d3.transition().duration(100);
+
+	let continent = $("#continent-select").val();
+
+	var data = data.filter(d => {
+		if (continent == "all") { return true; }
+		else {
+			return d.continent == continent;
+		}
+	})
 
 	// Population scale
 	let r = d3.scaleLinear()
@@ -185,7 +229,11 @@ function update(data) {
 			.attr('cy', d => y(d.life_exp))
 			.attr('r', d => r(d.population));
 
+	// update time label
 	yearLabel.text(index + 1800);
+	$("#year")[0].innerHTML = +(index + 1800)
+
+	$("#date-slider").slider("value", +(index + 1800))
 
 }
 

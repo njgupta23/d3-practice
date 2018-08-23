@@ -6,6 +6,8 @@
     <title>Gapminder Clone</title>
     <!-- Bootstrap -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <!-- jQuery UI CSS -->
+    <link href='http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css' rel='stylesheet' type='text/css'>
     <!-- Custom styling -->
     <link rel="stylesheet" href="css/style.css">
     <!-- Tooltip styling -->
@@ -26,12 +28,38 @@
             <div class="text-center">
                 <h1>Gapminder Clone</h1>
             </div>
-            <div id="chart-area"></div>  
+            <div class="col-md-6">
+                <button id="play-button" class="btn btn-primary">Play</button>
+                <button id="reset-button" class="btn btn-primary">Reset</button>
+                <div id="slider-div">
+                    <label>Year: <span id="year">1800</span></label>
+                    <div id="date-slider"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <select id="continent-select" class="form-control">
+                    <option selected value="all">All</option>
+                    <option value="europe">Europe</option>
+                    <option value="asia">Asia</option>
+                    <option value="americas">Americas</option>
+                    <option value="africa">Africa</option>
+                </select>
+            </div>
         </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="chart-area"></div>
+            </div> 
+        </div>
+
     </div>
 
 <!-- External JS libraries -->
 <script src="js/jquery.min.js"></script>
+<script
+  src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+  integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+  crossorigin="anonymous"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/d3.min.js"></script>
 <script src="js/d3-tip.js"></script>
